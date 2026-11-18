@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>3D Elektrik Alan - Pozitif Yük</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      .a-enter-vr { display: none !important; }
+    </style>
+  </head>
+
+  <body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+      
+      <a-marker preset="hiro">
+        
+        <a-entity id="physics-model" position="0 0.4 0">
+          
+          <!-- Pozitif yüklü küre -->
+          <a-sphere radius="0.08" color="#FF0000" material="roughness: 0.1; metalness: 0.5"></a-sphere>
+
+          <!-- Pozitif yük etiketi -->
+          <a-text
+            value="+ Pozitif Yük (+)"
+            position="0 0.18 0"
+            align="center"
+            color="#FFFFFF"
+            width="2"
+            font="mozillavr">
+          </a-text>
+
+          <a-entity id="field-lines"></a-entity>
+
+        </a-entity>
+      </a-marker>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      window.onload = () => {
+        const container = document.querySelector('#field-lines');
+        const numVectors = 24;
+        const fieldLength = 0.5;
+
+        // Küresel koordinatlarda 3D elektrik alan oklarını dağıt
+        for (let i = 0; i < numVectors; i++) {
+
+          // Fibonacci Küresi Formülü
+          let y = 1 - (i / (numVectors - 1)) * 2;
+          let rAtY = Math.sqrt(1 - y * y);
+          let goldenAngle = Math.PI * (3 - Math.sqrt(5));
+          let theta = goldenAngle * i;
+
+          let x = Math.cos(theta) * rAtY;
+          let z = Math.sin(theta) * rAtY;
+
+          let dir = new THREE.Vector3(x, y, z).normalize();
+
+          // Vektör grubu
+          let vectorGroup = document.createElement('a-entity');
+
+          // ÇİZGİ
+          let line = document.createElement('a-cylinder');
+          line.setAttribute('radius', '0.003');
+          line.setAttribute('height', fieldLength);
+          line.setAttribute('color', '#FFD700');
+          line.setAttribute('material', {roughness: 0.2});
+
+          line.setAttribute('position', {
+            x: 0,
+            y: fieldLength / 2,
+            z: 0
+          });
+
+          // OK BAŞI
+          let arrowHead = document.createElement('a-cone');
+          arrowHead.setAttribute('radius-bottom', '0.015');
+          arrowHead.setAttribute('radius-top', '0');
+          arrowHead.setAttribute('height', '0.07');
+          arrowHead.setAttribute('color', '#FFD700');
+          arrowHead.setAttribute('material', {roughness: 0.2});
+
+          arrowHead.setAttribute('position', {
+            x: 0,
+            y: fieldLength,
+            z: 0
+          });
+
+          // YÖNLENDİRME
+          let lookAtPos = dir.clone().multiplyScalar(2);
+
+          vectorGroup.addEventListener('loaded', () => {
+            vectorGroup.object3D.lookAt(lookAtPos);
+            vectorGroup.object3D.rotateX(Math.PI / 2);
+          });
+
+          vectorGroup.appendChild(line);
+          vectorGroup.appendChild(arrowHead);
+          container.appendChild(vectorGroup);
+        }
+      };
+    </script>
+  </body>
+</html>
